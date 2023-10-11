@@ -1,0 +1,12 @@
+title: "Vector Forge: Seamless Transformation of Data into Vectors"
+description: "Vector Forge opens up a world of effortless vectorization, enabling you to transform text and images into high-dimensional vectors using leading models. With a focus on simplicity and efficiency."
+tagline: "Crafting Vectors, Simplified"
+url: "https://www.vector-forge.com/"
+theme: minima
+logo: /assets/logo.png
+
+social:
+  name: Simeon Emanuilov
+  links:
+    - https://www.linkedin.com/in/simeon-emanuilov/
+    - https://github.com/simeonemanuilov

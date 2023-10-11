@@ -3,7 +3,7 @@
 </p>
 <p align="center">
   <a href="https://www.python.org/downloads/release/python-3110/" target="_blank">
-      <img src="https://img.shields.io/badge/Python-3.11-blue?logo=python" alt="Python 3.11">
+      <img src="https://img.shields.io/badge/Python->3.9-blue?logo=python" alt="Python > 3.11">
   </a>
 </p>
 <p align="center">
@@ -47,9 +47,9 @@
 - [Python 3.11](https://www.python.org/downloads/release/python-3114/)
 
 ## 📦 Supported models
-- CLIP (PyTorch)
-- VGG16 (Keras)
-- XCEPTION (Keras)
+- [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32) (Implemented with [PyTorch](https://pytorch.org/))
+- [VGG16](https://arxiv.org/abs/1409.1556) (Implemented with [Keras](https://keras.io/))
+- [Xception](https://keras.io/api/applications/xception/) (Implemented with [Keras](https://keras.io/))
 
 ## 🎛️ Usage
 
