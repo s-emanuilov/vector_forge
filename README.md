@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="assets/logo.png" alt="Vector Forge Logo" width="100">
+  <img src="assets/logo.png" alt="Vector Forge Logo" width="110">
 </p>
 <p align="center">
   <a href="https://www.python.org/downloads/release/python-3110/" target="_blank">
-      <img src="https://img.shields.io/badge/Python->3.9-blue?logo=python" alt="Python > 3.11">
+      <img src="https://img.shields.io/badge/Python->3.10-blue?logo=python" alt="Python > 3.11">
   </a>
 </p>
 <p align="center">
@@ -25,33 +25,53 @@
   </a>
 </p>
 
-<p align="center"> Create vectors from common neural networks with ease.</p>
-
 ---
+
+## 💡Core ideas
+
+🌄 For image embeddings, Vector Forge uses pre-trained networks, which means the models have already learned features
+from
+a large set of images called [ImageNet](https://www.image-net.org/). When we use these models in Vector Forge, we skip
+the part that
+identifies objects, and instead, we use
+the part that understands the image features. This way, we get a bunch of numbers (a vector) representing the image,
+which can be used
+in many different tasks like finding similar images, clustering, classification and many more.
+
+📄 Text embeddings are a way to convert words or sentences into numbers, making it possible for computers to understand
+and
+process them. In Vector Forge, the [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32) model is utilized to generate these embeddings. When you provide any text, be it
+a single word or a sentence, to CLIP, it transforms this text into a fixed-size vector. Each vector has a consistent
+length, no matter how long or short the original text is. This consistency in size is valuable, especially when
+comparing different pieces of text or measuring how similar a piece of text is to an image.
 
 ## 🧩 Features
 
-- **Image to Vector Conversion**: Easily convert individual images into feature vectors by specifying your desired model
+- **Image to Vector conversion**: Easily convert individual images into feature vectors by specifying your desired model
   to extract meaningful representations.
-- **Batch Processing**: Provide a folder path to process multiple images in bulk. Select your preferred model and let
+- **Batch processing**: Provide a folder path to process multiple images in bulk. Select your preferred model and let
   Vector Forge swiftly handle all the images in the specified directory.
-- **Text to Vector Transformation**: Effortlessly convert textual data into vectors. Choose your model, and Vector Forge
+- **Text to Vector transformation**: Effortlessly convert textual data into vectors. Choose your model, and Vector Forge
   will transform your text input into a high-dimensional vector representation.
-- **Support for Multiple Models**: Vector Forge supports various models for vectorization, including CLIP, Xception, and
+- **Support for multiple models**: Vector Forge supports various models for vectorization, including CLIP, Xception, and
   VGG16, to provide flexibility in handling different data types.
-- **Serialization Simplified**: Save your vectors as pickle files for easy storage and retrieval, whether for archival
-  purposes or future use.
 
 ## ⚙️ Requirements
 
-- [Python 3.11](https://www.python.org/downloads/release/python-3114/)
+- [Python >= 3.10](https://www.python.org/downloads/release/python-31012/)
 
 ## 📦 Supported models
-- [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32) (Implemented with [PyTorch](https://pytorch.org/))
-- [VGG16](https://arxiv.org/abs/1409.1556) (Implemented with [Keras](https://keras.io/))
-- [Xception](https://keras.io/api/applications/xception/) (Implemented with [Keras](https://keras.io/))
+
+|                              Model Name                              |         Implementation          |   Parameter Value    | Supports Image | Supports Text | Embedding Size |
+|:--------------------------------------------------------------------:|:-------------------------------:|:--------------------:|:--------------:|:-------------:|:--------------:|
+| [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32) | [PyTorch](https://pytorch.org/) |   `vf.Models.CLIP`   |       ✅        |       ✅       |     (512,)     |
+|               [VGG16](https://arxiv.org/abs/1409.1556)               |   [Keras](https://keras.io/)    |  `vf.Models.VGG16`   |       ✅        |       ❌       |    (2048,)     |
+|       [Xception](https://keras.io/api/applications/xception/)        |   [Keras](https://keras.io/)    | `vf.Models.XCEPTION` |       ✅        |       ❌       |    (2048,)     |
 
 ## 🎛️ Usage
+
+You can work on many pictures at once or just one piece of text with simple commands, making it a breeze to get your
+data ready for further use or analysis
 
 ### 🔧 Installation
 
@@ -69,57 +89,82 @@ import vector_forge as vf
 
 #### Default vectorizer
 
+By default, the vectorizer is [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32), as it works for text
+and images.
+
 ```python
-# By default, the vectorizer is CLIP
-# it works for text and images
 vectorizer = vf.Vectorizer()  
-```
-
-#### Change the vectorizer to use a different model
-
-```python
-# Change the vectorizer to Keras XCeption
-vectorizer = vf.Vectorizer(model=vf.Models.XCEPTION)
 ```
 
 #### Text to Vector
 
+Example how to convert a text prompt to a vector.
+
 ```python
-# Convert text to vector
 text_embedding = vectorizer.text_to_vector("Nice text!")
 ```
 
 #### Image to Vector
 
+Example how to convert to convert image from path to vector.
+
 ```python
-# Convert image to vector
 image_embedding = vectorizer.image_to_vector("/path/to/image.jpg")
 ```
 
+#### Change the vectorizer to use a different model
+
+Example how to change the vectorizer model, in this example to [Xception](https://keras.io/api/applications/xception/).  
+Keep in mind, that not all models work for for text prompts. If you want to compare image and texts, I recommend
+using [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32).
+
+```python
+vectorizer = vf.Vectorizer(model=vf.Models.XCEPTION)
+```
+
 #### Return types
-In Vector Forge, you have the flexibility to choose the format in which the vectors are returned. This is controlled by the return_type parameter available in the image_to_vector and text_to_vector methods of the Vectorizer class. Here are the available return types along with examples:
-- **numpy:** This is the default return type. Vectors are returned as NumPy arrays.
+
+In Vector Forge, you have the flexibility to choose the format in which the vectors are returned. This is controlled by
+the **return_type** parameter available in the **image_to_vector** and **text_to_vector** methods of the Vectorizer class. Here are
+the available return types along with examples:
+
+a) **"numpy"**
+
+This is the default return type. Vectors are returned as [NumPy](https://numpy.org/doc/stable/index.html) arrays.
+
 ```python
 image_embedding = vectorizer.image_to_vector("/path/to/image.jpg", return_type="numpy")
 # Output: array([0.0234, 0.0345, ..., 0.0456])
+# Shape: (2048,)  # for Xception and VGG16, (512,) for CLIP
 ```
 
-- **str:** Vectors are returned as a string representation of the NumPy array.
+b) **"str"**
+
+Vectors are returned as a string representation of the NumPy array.
+
 ```python
 image_embedding = vectorizer.image_to_vector("/path/to/image.jpg", return_type="str")
 # Output: "[0.0234, 0.0345, ..., 0.0456]"
 ```
 
-- **list**: Vectors are returned as a list of values.
+c) **"list**
+
+Vectors are returned as a list of values.
+
 ```python
 image_embedding = vectorizer.image_to_vector("/path/to/image.jpg", return_type="list")
 # Output: [0.0234, 0.0345, ..., 0.0456]
 ```
 
-- **2darray**: Vectors are returned as a 2-dimensional NumPy array, where each vector is a row in the array. This format is especially useful when you want to compute similarities or perform other vectorized operations.
+d) **"2darray"**
+
+Vectors are returned as a 2-dimensional NumPy array, where each vector is a row in the array. This format is especially
+useful when you want to compute similarities or perform other vectorized operations.
+
 ```python
 image_embedding = vectorizer.image_to_vector("/path/to/image.jpg", return_type="2darray")
 # Output: array([[0.0234, 0.0345, ..., 0.0456]])
+# Shape: (1, 2048)  # for Xception and VGG16, (1, 512) for CLIP
 ```
 
 #### Batch Processing for images
@@ -130,7 +175,8 @@ for vector in vectorizer.load_from_folder("/path/to/folder"):
     print(vector.shape)
 ```
 
-You can choose the return type that best suits your needs based on the downstream tasks you plan to perform with the vectors generated by Vector Forge.
+You can choose the return type that best suits your needs based on the downstream tasks you plan to perform with the
+vectors generated by Vector Forge.
 
 ### 🧪 Complete example
 
@@ -169,8 +215,8 @@ print(f"Similarity between text and second image: {similarity_2}")
 
 ### New image models
 
-- [ ] Add support for VGG19
+[ ] Add support for VGG19
 
 ### New text models
 
-- [ ] Add support for GloVe
+[ ] Add support for GloVe
