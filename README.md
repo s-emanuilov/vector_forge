@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="Vector Forge Logo" src="https://azbxuwxwcm.cloudimg.io/v7/vector-forge.s3.eu-central-1.amazonaws.com/assets/vector-forge-logo.png?w=80">
+  <img src="assets/logo.png" alt="Vector Forge Logo" width="100">
 </p>
 <p align="center">
   <a href="https://www.python.org/downloads/release/python-3110/" target="_blank">
