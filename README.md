@@ -227,7 +227,8 @@ print(f"Similarity between text and second image: {similarity_2}")
 
 ### New image models
 
-[ ] Add support for VGG19
+[ ] Add support for VGG19  
+[ ] Add possibility for index creation when using `load_from_folder`
 
 ### New text models
 

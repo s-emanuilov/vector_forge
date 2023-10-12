@@ -143,6 +143,10 @@ class Vectorizer:
             if not os.path.exists(input_image):
                 raise FileNotFoundError(f"File {input_image} does not exist!")
             input_image = cv2.imread(input_image)
+            if input_image is None:
+                raise ValueError(
+                    f"File {input_image} is not a valid image file or the path is incorrect."
+                )
         r = width / input_image.shape[1]
         dim = (width, int(input_image.shape[0] * r))
         return cv2.resize(
@@ -237,7 +241,11 @@ class Vectorizer:
             raise ValueError(f"Unsupported return type: {return_type}")
 
     def load_from_folder(
-        self, folder: str, return_type: str = "numpy", width: int = 600
+        self,
+        folder: str,
+        return_type: str = "numpy",
+        width: int = 600,
+        save_to_index: str = None,
     ):
         """
         Loads images from a specified folder, converts them to vectors,
@@ -250,10 +258,12 @@ class Vectorizer:
                                           Defaults to "numpy".
             width (int, optional): The width to which images should be resized.
                                     Defaults to 600.
+            save_to_index (str): The name of the file to save a index of files processed. If None, index is not saved. Default is None.
 
         Yields:
             np.ndarray | str | list: The vector representation of each image.
         """
+        index = []
         for root, dirs, files in os.walk(folder):
             for file in files:
                 file_path = os.path.join(root, file)
@@ -263,4 +273,13 @@ class Vectorizer:
                     vector = self.image_to_vector(
                         file_path, return_type=return_type, width=width
                     )
+                    index.append(file_path)
                     yield vector
+
+        if save_to_index:
+            with open(save_to_index, "w") as f:
+                # Write each file path to a new line in the index file
+                for path in index:
+                    f.write(
+                        "%s\n" % path
+                    )
