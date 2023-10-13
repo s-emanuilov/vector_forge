@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="assets/logo.png" alt="Vector Forge Logo" width="110">
+  <img src="https://vector-forge.s3.eu-central-1.amazonaws.com/assets/vector-forge-logo.png" alt="Vector Forge Logo" width="110">
 </p>
 <p align="center">
-  <a href="https://www.python.org/downloads/release/python-3110/" target="_blank">
-      <img src="https://img.shields.io/badge/Python->3.10-blue?logo=python" alt="Python > 3.11">
+  <a href="https://www.python.org/downloads/release/python-3100/" target="_blank">
+      <img src="https://img.shields.io/badge/Python->=3.10-blue?logo=python" alt="Python >= 3.10">
   </a>
 </p>
 <p align="center">
@@ -59,15 +59,15 @@ comparing different pieces of text or measuring how similar a piece of text is t
 
 ## ⚙️ Requirements
 
-- [Python >= 3.10](https://www.python.org/downloads/release/python-31012/)
+- [Python >= 3.10](https://www.python.org/downloads/release/python-3100/)
 
 ## 📦 Supported models
 
-|                              Model Name                              |         Implementation          |   Parameter Value    | Supports Image | Supports Text | Embedding Size |
-|:--------------------------------------------------------------------:|:-------------------------------:|:--------------------:|:--------------:|:-------------:|:--------------:|
-| [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32) | [PyTorch](https://pytorch.org/) |   `vf.Models.CLIP`   |       ✅        |       ✅       |     (512,)     |
-|               [VGG16](https://arxiv.org/abs/1409.1556)               |   [Keras](https://keras.io/)    |  `vf.Models.VGG16`   |       ✅        |       ❌       |    (2048,)     |
-|       [Xception](https://keras.io/api/applications/xception/)        |   [Keras](https://keras.io/)    | `vf.Models.Xception` |       ✅        |       ❌       |    (2048,)     |
+|                              Model Name                              |         Implementation          |  Parameter Value  | Supports Image | Supports Text | Embedding Size |
+|:--------------------------------------------------------------------:|:-------------------------------:|:-----------------:|:--------------:|:-------------:|:--------------:|
+| [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32) | [PyTorch](https://pytorch.org/) |   `Models.CLIP`   |       ✅        |       ✅       |     (512,)     |
+|               [VGG16](https://arxiv.org/abs/1409.1556)               |   [Keras](https://keras.io/)    |  `Models.VGG16`   |       ✅        |       ❌       |    (2048,)     |
+|       [Xception](https://keras.io/api/applications/xception/)        |   [Keras](https://keras.io/)    | `Models.Xception` |       ✅        |       ❌       |    (2048,)     |
 
 ## 🎛️ Usage
 
@@ -82,10 +82,10 @@ pip install vector_forge
 
 ### 🔌 Create a vectorizer
 
-#### Import the library
+#### Import the necessary classes or functions
 
 ```python
-import vector_forge as vf
+from vector_forge import Vectorizer
 ```
 
 #### Default vectorizer
@@ -94,7 +94,7 @@ By default, the vectorizer is [CLIP ViT-B/32](https://huggingface.co/openai/clip
 and images.
 
 ```python
-vectorizer = vf.Vectorizer()  
+vectorizer = Vectorizer()  
 ```
 
 #### Text to Vector
@@ -121,7 +121,9 @@ Keep in mind, that not all models work for for text prompts. If you want to comp
 using [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32).
 
 ```python
-vectorizer = vf.Vectorizer(model=vf.Models.Xception)
+from vector_forge import Vectorizer, Models
+
+vectorizer = Vectorizer(model=Models.Xception)
 ```
 
 #### Return types
@@ -181,19 +183,52 @@ for vector in vectorizer.load_from_folder("/path/to/folder"):
     print(vector.shape)
 ```
 
-You can specify the `return_type`, `width`, and `save_to_index` parameters to control the output format, the width to
-which images should be resized, and to save the file paths of processed images to an index file, respectively.
+You can specify the `return_type`, `save_to_index`, and `file_info_extractor` parameters to control the output format,
+to save the file paths of processed images to an index file, and to execute a custom function on each file for
+additional information extraction, respectively.
 
 ```python
-# Example with return_type and width parameters
-for vector in vectorizer.load_from_folder("/path/to/folder", return_type="str", width=300, save_to_index="paths.txt"):
-    print(vector.shape)  # Each vector is now a string and images are resized to a width of 300 pixels.
+# Example with return_type and save_to_index
+for vector in vectorizer.load_from_folder("/path/to/folder", return_type="2darray", save_to_index="paths.txt"):
+    print(vector.shape)
+```
+
+```python
+from vector_forge.info_extractors import get_file_info
+
+# Example with additional information to each file
+for vector, dimension in vectorizer.load_from_folder("/path/to/folder", file_info_extractor=get_file_info):
+    print(vector.shape)
+```
+
+#### Image preprocessing
+
+Vector Forge provides a collection of image preprocessing functions to help prepare images for vectorization. These
+functions can be found in the `image_preprocessors`.
+You can also specify your own custom image preprocessing function.
+
+```python
+from vector_forge.image_preprocessors import resize_image
+
+# Create a Vectorizer instance with the resize_image function as the image preprocessor
+resize_fn = lambda img: resize_image(img, width=600)
+vectorizer = Vectorizer(image_preprocessor=resize_fn)
+vector = vectorizer.image_to_vector(input_image='/path/to/image.jpg')
+```
+
+```python
+from vector_forge.image_preprocessors import convert_to_grayscale
+
+# Create a Vectorizer instance with the convert_to_grayscale function as the image preprocessor
+vectorizer = Vectorizer(image_preprocessor=convert_to_grayscale)
+vector = vectorizer.image_to_vector(input_image='/path/to/image.jpg')
 ```
 
 ### 🧪 A complete example
 
 ```python
-import vector_forge as vf
+from vector_forge import Vectorizer
+from vector_forge.image_preprocessors import resize_image
 from sklearn.metrics.pairwise import cosine_similarity
 
 
@@ -207,13 +242,14 @@ def compute_similarity(vectorizer, text, image_path):
     return similarity
 
 
-# Create a vectorizer with the default CLIP model
-vectorizer = vf.Vectorizer()
+# Create a vectorizer with the default CLIP model and a custom image preprocessor
+resize_fn = lambda img: resize_image(img, width=600)
+vectorizer = Vectorizer(image_preprocessor=resize_fn)
 
 # Define text and image paths
 text = "A couple of birds"
-image_path_1 = "vector_forge/test_data/birds.jpg"
-image_path_2 = "vector_forge/test_data/sample.jpg"
+image_path_1 = "vector_forge/test_data/birds.jpg"  # adapt paths accordingly
+image_path_2 = "vector_forge/test_data/sample.jpg"  # adapt paths accordingly
 
 # Compute and print similarity scores
 similarity_1 = compute_similarity(vectorizer, text, image_path_1)
@@ -223,13 +259,36 @@ print(f"Similarity between text and first image: {similarity_1}")
 print(f"Similarity between text and second image: {similarity_2}")
 ```
 
+Complete example how to use `file_info_extractor`, which can extract some valuable information from files.  
+
+```python
+from vector_forge import Vectorizer, Models
+from vector_forge.info_extractors import get_colors
+
+# Create a Vectorizer instance
+vectorizer = Vectorizer(model=Models.Xception)
+
+# Define the path to your folder containing images
+folder_path = '/path/to/images'
+
+# Process all images in the specified folder
+for vector, colors in vectorizer.load_from_folder(folder_path, file_info_extractor=get_colors):
+    # Print the vector shape and image dimensions
+    print(f'Vector shape: {vector.shape}')
+    print(f'Image colors: {colors}')
+```
+
 ## 🔮 Future features
+
+- [ ] Make inference APIs which hold the models in memory
 
 ### Images
 
-[x] Add support for VGG19  
-[x] Add possibility for index creation when using `load_from_folder`
+- [x] Add support for VGG19  
+- [x] Add possibility for index creation when using `load_from_folder`
+- [ ] Add support for [larger CLIP model](https://huggingface.co/openai/clip-vit-large-patch14)
 
 ### Texts
 
-[ ] Add support for GloVe
+- [ ] Add support for GloVe
+- [ ] Add text preprocessors

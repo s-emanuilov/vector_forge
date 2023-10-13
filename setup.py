@@ -7,7 +7,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="vector_forge",
-    version="0.0.4",
+    version="0.0.5",
     author="Simeon Emanuilov",
     author_email="simeon.emanuilov@gmail.com",
     description="Easily convert individual images into feature vectors by specifying your desired model to extract meaningful representations.",
