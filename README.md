@@ -67,7 +67,7 @@ comparing different pieces of text or measuring how similar a piece of text is t
 |:--------------------------------------------------------------------:|:-------------------------------:|:--------------------:|:--------------:|:-------------:|:--------------:|
 | [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32) | [PyTorch](https://pytorch.org/) |   `vf.Models.CLIP`   |       ✅        |       ✅       |     (512,)     |
 |               [VGG16](https://arxiv.org/abs/1409.1556)               |   [Keras](https://keras.io/)    |  `vf.Models.VGG16`   |       ✅        |       ❌       |    (2048,)     |
-|       [Xception](https://keras.io/api/applications/xception/)        |   [Keras](https://keras.io/)    | `vf.Models.XCEPTION` |       ✅        |       ❌       |    (2048,)     |
+|       [Xception](https://keras.io/api/applications/xception/)        |   [Keras](https://keras.io/)    | `vf.Models.Xception` |       ✅        |       ❌       |    (2048,)     |
 
 ## 🎛️ Usage
 
