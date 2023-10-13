@@ -35,7 +35,7 @@ class Vectorizer:
 
             self.processor = CLIPProcessor.from_pretrained(model.value)
             self.model_instance = CLIPModel.from_pretrained(model.value).to(DEVICE)
-        elif model == Models.XCEPTION:
+        elif model == Models.Xception:
             from tensorflow.keras.applications import Xception  # lazy loading
 
             self.model_instance = Xception(
@@ -47,14 +47,20 @@ class Vectorizer:
             self.model_instance = VGG16(
                 weights="imagenet", include_top=False, pooling="avg"
             )
+        elif model == Models.VGG19:
+            from tensorflow.keras.applications import VGG19  # lazy loading
+
+            self.model_instance = VGG19(
+                weights="imagenet", include_top=False, pooling="avg"
+            )
         else:
             raise ValueError(f"Unsupported model: {model}")
 
     def image_to_vector(
-        self,
-        input_image: str | np.ndarray,
-        return_type: str = "numpy",
-        width: int = 600,
+            self,
+            input_image: str | np.ndarray,
+            return_type: str = "numpy",
+            width: int = 600,
     ) -> np.ndarray | str | list:
         """
         Converts an image to a vector representation using the specified model.
@@ -77,12 +83,15 @@ class Vectorizer:
                 text=None, images=input_image, return_tensors="pt"
             )["pixel_values"]
             img_emb = self.model_instance.get_image_features(image_tensor)
-        elif self.model == Models.XCEPTION:
+        elif self.model == Models.Xception:
             input_image = self._prepare_image_xception(input_image, width)
-            img_emb = self.model_instance.predict(input_image)
+            img_emb = self.model_instance.predict(input_image, verbose=0)
         elif self.model == Models.VGG16:
             input_image = self._prepare_image_vgg16(input_image, width)
-            img_emb = self.model_instance.predict(input_image)
+            img_emb = self.model_instance.predict(input_image, verbose=0)
+        elif self.model == Models.VGG19:
+            input_image = self._prepare_image_vgg19(input_image, width)
+            img_emb = self.model_instance.predict(input_image, verbose=0)
         else:
             raise ValueError(f"Unsupported model: {self.model}")
 
@@ -90,7 +99,7 @@ class Vectorizer:
         return result
 
     def text_to_vector(
-        self, input_text: str, return_type: str = "numpy"
+            self, input_text: str, return_type: str = "numpy"
     ) -> np.ndarray | str | list:
         """
         Converts a given text to a vector representation using the specified model.
@@ -158,7 +167,7 @@ class Vectorizer:
         )
 
     def _prepare_image_xception(
-        self, input_image: str | np.ndarray, width: int
+            self, input_image: str | np.ndarray, width: int
     ) -> np.ndarray:
         """
         Prepares the input image for vectorization using the Xception model
@@ -174,12 +183,9 @@ class Vectorizer:
         from tensorflow.keras.applications.xception import (
             preprocess_input,
         )  # Lazy import
-        from tensorflow.keras.preprocessing import image as keras_image
 
         input_image = self._prepare_image(input_image, width)
         input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
-        input_image = keras_image.array_to_img(input_image)
-        input_image = keras_image.img_to_array(input_image)
         input_image = np.expand_dims(input_image, axis=0)
         input_image = preprocess_input(
             input_image
@@ -187,7 +193,7 @@ class Vectorizer:
         return input_image
 
     def _prepare_image_vgg16(
-        self, input_image: str | np.ndarray, width: int
+            self, input_image: str | np.ndarray, width: int
     ) -> np.ndarray:
         """
         Prepares the input image for vectorization using the VGG16 model
@@ -203,14 +209,35 @@ class Vectorizer:
         from tensorflow.keras.applications.vgg16 import (
             preprocess_input as vgg16_preprocess_input,
         )
-        from tensorflow.keras.preprocessing import image as keras_image
 
         input_image = self._prepare_image(input_image, width)
         input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
-        input_image = keras_image.array_to_img(input_image)
-        input_image = keras_image.img_to_array(input_image)
         input_image = np.expand_dims(input_image, axis=0)
         input_image = vgg16_preprocess_input(input_image)
+        return input_image
+
+    def _prepare_image_vgg19(
+            self, input_image: str | np.ndarray, width: int
+    ) -> np.ndarray:
+        """
+        Prepares the input image for vectorization using the VGG19 model
+        by resizing and preprocessing it.
+
+        Args:
+            input_image (str | np.ndarray): Path to the image or a NumPy array of the image.
+            width (int): The width to which the image should be resized.
+
+        Returns:
+            np.ndarray: The preprocessed image ready for vectorization with VGG19.
+        """
+        from tensorflow.keras.applications.vgg19 import (
+            preprocess_input as vgg19_preprocess_input,
+        )
+
+        input_image = self._prepare_image(input_image, width)
+        input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
+        input_image = np.expand_dims(input_image, axis=0)
+        input_image = vgg19_preprocess_input(input_image)
         return input_image
 
     def _process_result(self, result, return_type: str) -> np.ndarray | str | list:
@@ -241,11 +268,11 @@ class Vectorizer:
             raise ValueError(f"Unsupported return type: {return_type}")
 
     def load_from_folder(
-        self,
-        folder: str,
-        return_type: str = "numpy",
-        width: int = 600,
-        save_to_index: str = None,
+            self,
+            folder: str,
+            return_type: str = "numpy",
+            width: int = 600,
+            save_to_index: str = None,
     ):
         """
         Loads images from a specified folder, converts them to vectors,
@@ -280,6 +307,4 @@ class Vectorizer:
             with open(save_to_index, "w") as f:
                 # Write each file path to a new line in the index file
                 for path in index:
-                    f.write(
-                        "%s\n" % path
-                    )
+                    f.write("%s\n" % path)

@@ -9,12 +9,13 @@ class TestVectorizer(unittest.TestCase):
     def setUp(self):
         self.vectorizer_clip = vectorizer.Vectorizer(model=vectorizer.Models.CLIP)
         self.vectorizer_xception = vectorizer.Vectorizer(
-            model=vectorizer.Models.XCEPTION
+            model=vectorizer.Models.Xception
         )
         self.vectorizer_vgg16 = vectorizer.Vectorizer(model=vectorizer.Models.VGG16)
-        self.sample_image_path = (
-            "test_data/sample.jpg"
+        self.vectorizer_vgg19 = vectorizer.Vectorizer(
+            model=vectorizer.Models.VGG19
         )
+        self.sample_image_path = "test_data/sample.jpg"
         self.sample_text = "This is a sample text for testing."
 
     def test_image_to_vector(self):
@@ -28,6 +29,10 @@ class TestVectorizer(unittest.TestCase):
 
         # Testing with VGG16
         vector = self.vectorizer_vgg16.image_to_vector(self.sample_image_path)
+        self.assertIsInstance(vector, np.ndarray)
+
+        # Testing with VGG19
+        vector = self.vectorizer_vgg19.image_to_vector(self.sample_image_path)
         self.assertIsInstance(vector, np.ndarray)
 
     def test_text_to_vector(self):

@@ -121,7 +121,7 @@ Keep in mind, that not all models work for for text prompts. If you want to comp
 using [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32).
 
 ```python
-vectorizer = vf.Vectorizer(model=vf.Models.XCEPTION)
+vectorizer = vf.Vectorizer(model=vf.Models.Xception)
 ```
 
 #### Return types
@@ -181,13 +181,13 @@ for vector in vectorizer.load_from_folder("/path/to/folder"):
     print(vector.shape)
 ```
 
-You can specify the return_type and width parameters to control the output format and the width to which images should
-be resized, respectively.
+You can specify the `return_type`, `width`, and `save_to_index` parameters to control the output format, the width to
+which images should be resized, and to save the file paths of processed images to an index file, respectively.
 
 ```python
 # Example with return_type and width parameters
-for vector in vectorizer.load_from_folder("/path/to/folder", return_type="str", width=300):
-    print(vector)  # Each vector is now a string and images are resized to a width of 300 pixels.
+for vector in vectorizer.load_from_folder("/path/to/folder", return_type="str", width=300, save_to_index="paths.txt"):
+    print(vector.shape)  # Each vector is now a string and images are resized to a width of 300 pixels.
 ```
 
 ### 🧪 A complete example
@@ -225,11 +225,11 @@ print(f"Similarity between text and second image: {similarity_2}")
 
 ## 🔮 Future features
 
-### New image models
+### Images
 
-[ ] Add support for VGG19  
-[ ] Add possibility for index creation when using `load_from_folder`
+[x] Add support for VGG19  
+[x] Add possibility for index creation when using `load_from_folder`
 
-### New text models
+### Texts
 
 [ ] Add support for GloVe
