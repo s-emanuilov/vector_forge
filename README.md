@@ -54,8 +54,9 @@ comparing different pieces of text or measuring how similar a piece of text is t
   Vector Forge swiftly handle all the images in the specified directory.
 - **Text to Vector transformation**: Effortlessly convert textual data into vectors. Choose your model, and Vector Forge
   will transform your text input into a high-dimensional vector representation.
-- **Support for multiple models**: Vector Forge supports various models for vectorization, including CLIP, Xception, and
-  VGG16, to provide flexibility in handling different data types.
+- **Support for multiple models**: Vector Forge supports various models for vectorization, including CLIP ViT-B/32, CLIP
+  ViT-L/14, Xception,
+  VGG16 and VGG19, to provide flexibility in handling different data types.
 
 ## ⚙️ Requirements
 
@@ -63,11 +64,13 @@ comparing different pieces of text or measuring how similar a piece of text is t
 
 ## 📦 Supported models
 
-|                              Model Name                              |         Implementation          |  Parameter Value  | Supports Image | Supports Text | Embedding Size |
-|:--------------------------------------------------------------------:|:-------------------------------:|:-----------------:|:--------------:|:-------------:|:--------------:|
-| [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32) | [PyTorch](https://pytorch.org/) |   `Models.CLIP`   |       ✅        |       ✅       |     (512,)     |
-|               [VGG16](https://arxiv.org/abs/1409.1556)               |   [Keras](https://keras.io/)    |  `Models.VGG16`   |       ✅        |       ❌       |    (2048,)     |
-|       [Xception](https://keras.io/api/applications/xception/)        |   [Keras](https://keras.io/)    | `Models.Xception` |       ✅        |       ❌       |    (2048,)     |
+|                              Model Name                               |         Implementation          |   Parameter Value   | Supports Image | Supports Text | Embedding Size |
+|:---------------------------------------------------------------------:|:-------------------------------:|:-------------------:|:--------------:|:-------------:|:--------------:|
+| [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32)  | [PyTorch](https://pytorch.org/) | `Models.CLIP_B_P32` |       ✅        |       ✅       |     (512,)     |
+| [CLIP ViT-L/14](https://huggingface.co/openai/clip-vit-large-patch14) | [PyTorch](https://pytorch.org/) | `Models.CLIP_L_P14` |       ✅        |       ✅       |     (768,)     |
+|               [VGG16](https://arxiv.org/abs/1409.1556)                |   [Keras](https://keras.io/)    |   `Models.VGG16`    |       ✅        |       ❌       |     (512,)     |
+|               [VGG19](https://arxiv.org/abs/1409.1556)                |   [Keras](https://keras.io/)    |   `Models.VGG19`    |       ✅        |       ❌       |     (512,)     |
+|        [Xception](https://keras.io/api/applications/xception/)        |   [Keras](https://keras.io/)    |  `Models.Xception`  |       ✅        |       ❌       |    (2048,)     |
 
 ## 🎛️ Usage
 
@@ -140,7 +143,7 @@ This is the default return type. Vectors are returned as [NumPy](https://numpy.o
 ```python
 image_embedding = vectorizer.image_to_vector("/path/to/image.jpg", return_type="numpy")
 # Output: array([0.0234, 0.0345, ..., 0.0456])
-# Shape: (2048,)  # for Xception and VGG16, (512,) for CLIP
+# Shape: (2048,) for Xception, (512,) for VGG16, VGG19 and CLIP ViT-B/32, (768, ) for CLIP ViT-L/14
 ```
 
 b) **return_type="str"**
@@ -169,7 +172,7 @@ useful when you want to compute similarities or perform other vectorized operati
 ```python
 image_embedding = vectorizer.image_to_vector("/path/to/image.jpg", return_type="2darray")
 # Output: array([[0.0234, 0.0345, ..., 0.0456]])
-# Shape: (1, 2048)  # for Xception and VGG16, (1, 512) for CLIP
+# Shape: (1, 2048)  # for Xception, (1, 512) for VGG16, VGG19 and CLIP ViT-B/32, (1, 768) for CLIP ViT-L/14
 ```
 
 #### Batch Processing for images
@@ -242,7 +245,7 @@ def compute_similarity(vectorizer, text, image_path):
     return similarity
 
 
-# Create a vectorizer with the default CLIP model and a custom image preprocessor
+# Create a vectorizer with the default CLIP ViT-B/32 model and a custom image preprocessor
 resize_fn = lambda img: resize_image(img, width=600)
 vectorizer = Vectorizer(image_preprocessor=resize_fn)
 
@@ -259,7 +262,7 @@ print(f"Similarity between text and first image: {similarity_1}")
 print(f"Similarity between text and second image: {similarity_2}")
 ```
 
-Complete example how to use `file_info_extractor`, which can extract some valuable information from files.  
+Complete example how to use `file_info_extractor`, which can extract some valuable information from files.
 
 ```python
 from vector_forge import Vectorizer, Models
@@ -284,9 +287,9 @@ for vector, colors in vectorizer.load_from_folder(folder_path, file_info_extract
 
 ### Images
 
-- [x] Add support for VGG19  
+- [x] Add support for VGG19
 - [x] Add possibility for index creation when using `load_from_folder`
-- [ ] Add support for [larger CLIP model](https://huggingface.co/openai/clip-vit-large-patch14)
+- [x] Add support for [larger CLIP model](https://huggingface.co/openai/clip-vit-large-patch14)
 
 ### Texts
 

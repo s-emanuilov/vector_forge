@@ -4,9 +4,18 @@ from typing import Callable
 import cv2
 import numpy as np
 import torch
-
+from tensorflow.keras.applications.vgg16 import (
+    preprocess_input as vgg16_preprocess_input,
+)
+from tensorflow.keras.applications.vgg19 import (
+    preprocess_input as vgg19_preprocess_input,
+)
+from tensorflow.keras.applications.xception import (
+    preprocess_input as xcpetion_preprocess_input,
+)
+from tensorflow.keras.preprocessing import image
+from tensorflow.keras.utils import array_to_img
 from .constants import Models
-from .image_preprocessors import convert_to_rgb_expand
 
 # Check if GPU available
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -24,22 +33,25 @@ class Vectorizer:
     """
 
     def __init__(
-        self,
-        model: Models = Models.CLIP,
-        image_preprocessor: Callable[[np.ndarray], np.ndarray] = None,
+            self,
+            model: Models = Models.CLIP_B_P32,
+            image_preprocessor: Callable[[np.ndarray], np.ndarray] = None,
+            normalization: bool = False,
     ):
         """
         Initializes the Vectorizer with the specified model and an optional image preprocessor function.
 
         Args:
-            model (Models, optional): The model to be used for vectorization. Defaults to Models.CLIP.
+            model (Models, optional): The model to be used for vectorization. Defaults to Models.CLIP_B_P32.
             image_preprocessor (callable, optional): A function to preprocess the image before resizing.
                                                      This function should accept a single argument, the image,
                                                      and return the preprocessed image. Defaults to None.
+            normalization (bool, optional): Whether to normalize the generated vectors. Defaults to False.
         """
         self.model = model
         self.image_preprocessor = image_preprocessor
-        if model == Models.CLIP:
+        self.normalization = normalization
+        if model == Models.CLIP_B_P32 or model == Models.CLIP_L_P14:
             from transformers import CLIPProcessor, CLIPTokenizerFast, CLIPModel
 
             self.processor = CLIPProcessor.from_pretrained(model.value)
@@ -66,9 +78,9 @@ class Vectorizer:
             raise ValueError(f"Unsupported model: {model}")
 
     def image_to_vector(
-        self,
-        input_image: str | np.ndarray,
-        return_type: str = "numpy",
+            self,
+            input_image: str,
+            return_type: str = "numpy",
     ) -> np.ndarray | str | list:
         """
         Converts an image to a vector representation using the specified model.
@@ -82,7 +94,7 @@ class Vectorizer:
         Returns:
             np.ndarray | str | list: The vector representation of the image.
         """
-        if self.model == Models.CLIP:
+        if self.model in (Models.CLIP_B_P32, Models.CLIP_L_P14):
             input_image = self._prepare_image_clip(input_image)
             image_tensor = self.processor(
                 text=None, images=input_image, return_tensors="pt"
@@ -104,7 +116,7 @@ class Vectorizer:
         return result
 
     def text_to_vector(
-        self, input_text: str, return_type: str = "numpy"
+            self, input_text: str, return_type: str = "numpy"
     ) -> np.ndarray | str | list:
         """
         Converts a given text to a vector representation using the specified model.
@@ -118,7 +130,7 @@ class Vectorizer:
         Returns:
             np.ndarray | str | list: The vector representation of the text.
         """
-        if self.model == Models.CLIP:
+        if self.model in (Models.CLIP_B_P32, Models.CLIP_L_P14):
             from transformers import CLIPTokenizerFast
 
             tokenizer = CLIPTokenizerFast.from_pretrained(self.model.value)
@@ -128,7 +140,9 @@ class Vectorizer:
         else:
             raise ValueError(f"Unsupported model for text: {self.model}")
 
-        result /= np.linalg.norm(result, axis=0)
+        if self.normalization:
+            result /= np.linalg.norm(result, axis=0)
+
         if return_type == "numpy":
             return result
         elif return_type == "2darray":
@@ -140,9 +154,10 @@ class Vectorizer:
         else:
             raise ValueError(f"Unsupported return type: {return_type}")
 
-    def _prepare_image(self, input_image: str | np.ndarray) -> np.ndarray:
+    @staticmethod
+    def _check_image(input_image: str | np.ndarray) -> np.ndarray:
         """
-        Prepares the input image for vectorization by applying image_preprocessor and check if the provided path is valid image
+        Verify if the input image exist and it is valid
 
         Args:
             input_image (str | np.ndarray): Path to the image or a NumPy array of the image.
@@ -158,6 +173,9 @@ class Vectorizer:
                 raise ValueError(
                     f"File {input_image} is not a valid image file or the path is incorrect."
                 )
+        return input_image
+
+    def _apply_preprocessors(self, input_image: str | np.ndarray) -> np.ndarray:
         # Apply the global image preprocessor function if provided
         if self.image_preprocessor is not None:
             input_image = self.image_preprocessor(input_image)
@@ -176,68 +194,61 @@ class Vectorizer:
         Returns:
             np.ndarray: The preprocessed image as a NumPy array.
         """
-        input_image = self._prepare_image(input_image)
+        input_image = self._check_image(input_image)
+        input_image = self._apply_preprocessors(input_image)
         return input_image
 
-    def _prepare_image_xception(self, input_image: str | np.ndarray) -> np.ndarray:
+    def _prepare_image_xception(self, input_image: str) -> np.ndarray:
         """
         Prepares the input image for vectorization using the Xception model
         by resizing and preprocessing it.
 
         Args:
-            input_image (str | np.ndarray): Path to the image or a NumPy array of the image.
+            input_image (str): Path to the image.
 
         Returns:
             np.ndarray: The preprocessed image ready for vectorization with Xception.
         """
-        from tensorflow.keras.applications.xception import (
-            preprocess_input,
-        )  # Lazy import
-
-        input_image = self._prepare_image(input_image)
-        input_image = convert_to_rgb_expand(input_image)
-        input_image = preprocess_input(
-            input_image
-        )  # This is where preprocess_input is used
+        input_image = image.load_img(input_image, target_size=(299, 299))
+        input_image = image.img_to_array(input_image)
+        input_image = self._apply_preprocessors(input_image)
+        input_image = np.expand_dims(input_image, axis=0)
+        input_image = xcpetion_preprocess_input(input_image)
         return input_image
 
-    def _prepare_image_vgg16(self, input_image: str | np.ndarray) -> np.ndarray:
+    def _prepare_image_vgg16(self, input_image: str) -> np.ndarray:
         """
         Prepares the input image for vectorization using the VGG16 model
         by resizing and preprocessing it.
 
         Args:
-            input_image (str | np.ndarray): Path to the image or a NumPy array of the image.
+            input_image (str): Path to the image
 
         Returns:
             np.ndarray: The preprocessed image ready for vectorization with VGG16.
         """
-        from tensorflow.keras.applications.vgg16 import (
-            preprocess_input as vgg16_preprocess_input,
-        )
-
-        input_image = self._prepare_image(input_image)
-        input_image = convert_to_rgb_expand(input_image)
+        input_image = image.load_img(input_image, target_size=(224, 224))
+        input_image = image.img_to_array(input_image)
+        input_image = self._apply_preprocessors(input_image)
+        input_image = np.expand_dims(input_image, axis=0)
         input_image = vgg16_preprocess_input(input_image)
         return input_image
 
-    def _prepare_image_vgg19(self, input_image: str | np.ndarray) -> np.ndarray:
+    def _prepare_image_vgg19(self, input_image: str) -> np.ndarray:
         """
         Prepares the input image for vectorization using the VGG19 model
         by resizing and preprocessing it.
 
         Args:
-            input_image (str | np.ndarray): Path to the image or a NumPy array of the image.
+            input_image (str): Path to the image
 
         Returns:
             np.ndarray: The preprocessed image ready for vectorization with VGG19.
         """
-        from tensorflow.keras.applications.vgg19 import (
-            preprocess_input as vgg19_preprocess_input,
-        )
-
-        input_image = self._prepare_image(input_image)
-        input_image = convert_to_rgb_expand(input_image)
+        input_image = image.load_img(input_image, target_size=(224, 224))
+        input_image = image.img_to_array(input_image)
+        input_image = self._apply_preprocessors(input_image)
+        input_image = np.expand_dims(input_image, axis=0)
         input_image = vgg19_preprocess_input(input_image)
         return input_image
 
@@ -254,9 +265,14 @@ class Vectorizer:
             np.ndarray | str | list: The processed vector.
         """
         result = (
-            result[0].cpu().detach().numpy() if self.model == Models.CLIP else result[0]
+            result[0].cpu().detach().numpy()
+            if self.model in (Models.CLIP_B_P32, Models.CLIP_L_P14)
+            else result[0]
         )
-        result /= np.linalg.norm(result, axis=0)
+
+        if self.normalization:
+            result /= np.linalg.norm(result, axis=0)
+
         if return_type == "str":
             return np.array2string(result, separator=", ")
         elif return_type == "list":
@@ -269,11 +285,11 @@ class Vectorizer:
             raise ValueError(f"Unsupported return type: {return_type}")
 
     def load_from_folder(
-        self,
-        folder: str,
-        return_type: str = "numpy",
-        save_to_index: str = None,
-        file_info_extractor: callable = None,
+            self,
+            folder: str,
+            return_type: str = "numpy",
+            save_to_index: str = None,
+            file_info_extractor: callable = None,
     ):
         """
         Loads images from a specified folder, converts them to vectors,
