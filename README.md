@@ -290,6 +290,7 @@ for vector, colors in vectorizer.load_from_folder(folder_path, file_info_extract
 - [x] Add support for VGG19
 - [x] Add possibility for index creation when using `load_from_folder`
 - [x] Add support for [larger CLIP model](https://huggingface.co/openai/clip-vit-large-patch14)
+- [ ] Optimize CLIP generation with [OpenVino IR](https://docs.openvino.ai/2022.3/notebooks/228-clip-zero-shot-image-classification-with-output.html)
 
 ### Texts
 
