@@ -14,7 +14,6 @@ from tensorflow.keras.applications.xception import (
     preprocess_input as xcpetion_preprocess_input,
 )
 from tensorflow.keras.preprocessing import image
-from tensorflow.keras.utils import array_to_img
 from .constants import Models
 
 # Check if GPU available
