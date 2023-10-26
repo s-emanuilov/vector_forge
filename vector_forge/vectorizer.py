@@ -14,6 +14,7 @@ from tensorflow.keras.applications.xception import (
     preprocess_input as xcpetion_preprocess_input,
 )
 from tensorflow.keras.preprocessing import image
+
 from .constants import Models
 
 # Check if GPU available
@@ -32,10 +33,10 @@ class Vectorizer:
     """
 
     def __init__(
-            self,
-            model: Models = Models.CLIP_B_P32,
-            image_preprocessor: Callable[[np.ndarray], np.ndarray] = None,
-            normalization: bool = False,
+        self,
+        model: Models = Models.CLIP_B_P32,
+        image_preprocessor: Callable[[np.ndarray], np.ndarray] = None,
+        normalization: bool = False,
     ):
         """
         Initializes the Vectorizer with the specified model and an optional image preprocessor function.
@@ -55,6 +56,18 @@ class Vectorizer:
 
             self.processor = CLIPProcessor.from_pretrained(model.value)
             self.model_instance = CLIPModel.from_pretrained(model.value).to(DEVICE)
+        elif model == Models.CLIP_B_P32_OV or model == Models.CLIP_L_P14_OV:
+            from huggingface_hub import snapshot_download
+            from transformers import CLIPProcessor
+            from openvino.runtime import Core
+
+            ov_path = snapshot_download(repo_id=model.value)
+            self.processor = CLIPProcessor.from_pretrained(model.value)
+            ov_model_xml = os.path.join(ov_path, "clip-vit-base-patch32.xml")
+            core = Core()
+            ov_model = core.read_model(model=ov_model_xml)
+            # Compile model for loading on device
+            self.model_instance = core.compile_model(ov_model)
         elif model == Models.Xception:
             from tensorflow.keras.applications import Xception  # lazy loading
 
@@ -77,9 +90,9 @@ class Vectorizer:
             raise ValueError(f"Unsupported model: {model}")
 
     def image_to_vector(
-            self,
-            input_image: str,
-            return_type: str = "numpy",
+        self,
+        input_image: str,
+        return_type: str = "numpy",
     ) -> np.ndarray | str | list:
         """
         Converts an image to a vector representation using the specified model.
@@ -99,6 +112,14 @@ class Vectorizer:
                 text=None, images=input_image, return_tensors="pt"
             )["pixel_values"]
             img_emb = self.model_instance.get_image_features(image_tensor)
+        elif self.model in (Models.CLIP_B_P32_OV, Models.CLIP_L_P14_OV):
+            input_image = self._prepare_image_clip(input_image)
+            image_tensor = self.processor(
+                text=None, images=input_image, return_tensors="pt"
+            )["pixel_values"]
+            img_emb = self.model_instance(dict(image_tensor))[
+                self.model_instance.output(0)
+            ]
         elif self.model == Models.Xception:
             input_image = self._prepare_image_xception(input_image)
             img_emb = self.model_instance.predict(input_image, verbose=0)
@@ -115,7 +136,7 @@ class Vectorizer:
         return result
 
     def text_to_vector(
-            self, input_text: str, return_type: str = "numpy"
+        self, input_text: str, return_type: str = "numpy"
     ) -> np.ndarray | str | list:
         """
         Converts a given text to a vector representation using the specified model.
@@ -284,11 +305,11 @@ class Vectorizer:
             raise ValueError(f"Unsupported return type: {return_type}")
 
     def load_from_folder(
-            self,
-            folder: str,
-            return_type: str = "numpy",
-            save_to_index: str = None,
-            file_info_extractor: callable = None,
+        self,
+        folder: str,
+        return_type: str = "numpy",
+        save_to_index: str = None,
+        file_info_extractor: callable = None,
     ):
         """
         Loads images from a specified folder, converts them to vectors,

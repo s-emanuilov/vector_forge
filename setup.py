@@ -24,6 +24,7 @@ setup(
         "torch",
         "tensorflow",
         "Pillow",
+        "openvino-dev"
     ],
     classifiers=[
         "License :: OSI Approved :: MIT License",
