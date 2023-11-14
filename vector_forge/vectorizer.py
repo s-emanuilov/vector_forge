@@ -33,10 +33,10 @@ class Vectorizer:
     """
 
     def __init__(
-        self,
-        model: Models = Models.CLIP_B_P32,
-        image_preprocessor: Callable[[np.ndarray], np.ndarray] = None,
-        normalization: bool = False,
+            self,
+            model: Models = Models.CLIP_B_P32,
+            image_preprocessor: Callable[[np.ndarray], np.ndarray] = None,
+            normalization: bool = False,
     ):
         """
         Initializes the Vectorizer with the specified model and an optional image preprocessor function.
@@ -90,9 +90,9 @@ class Vectorizer:
             raise ValueError(f"Unsupported model: {model}")
 
     def image_to_vector(
-        self,
-        input_image: str,
-        return_type: str = "numpy",
+            self,
+            input_image: str,
+            return_type: str = "numpy",
     ) -> np.ndarray | str | list:
         """
         Converts an image to a vector representation using the specified model.
@@ -117,6 +117,7 @@ class Vectorizer:
             image_tensor = self.processor(
                 text=None, images=input_image, return_tensors="pt"
             )["pixel_values"]
+            d = self.model_instance
             img_emb = self.model_instance(dict(image_tensor))[
                 self.model_instance.output(0)
             ]
@@ -136,7 +137,7 @@ class Vectorizer:
         return result
 
     def text_to_vector(
-        self, input_text: str, return_type: str = "numpy"
+            self, input_text: str, return_type: str = "numpy"
     ) -> np.ndarray | str | list:
         """
         Converts a given text to a vector representation using the specified model.
@@ -304,56 +305,64 @@ class Vectorizer:
         else:
             raise ValueError(f"Unsupported return type: {return_type}")
 
-    def load_from_folder(
-        self,
-        folder: str,
-        return_type: str = "numpy",
-        save_to_index: str = None,
-        file_info_extractor: callable = None,
-    ):
+    def load_from_folder(self, folder, batch_size=32, return_type="numpy", file_info_extractor=None,
+                         save_to_index=None):
         """
-        Loads images from a specified folder, converts them to vectors,
-        and yields the vectors one by one. Optionally executes a custom
-        function on each file and yields the result alongside the vector.
+        Process images in batches from a folder.
 
         Args:
-            folder (str): Path to the folder containing images.
-            return_type (str, optional): The format in which to return the vectors.
-                                          Options are "numpy", "str", "list", or "2darray".
-                                          Defaults to "numpy".
-            save_to_index (str): The name of the file to save an index of files processed.
-                                 If None, the index is not saved. Default is None.
-            file_info_extractor (callable, optional): A function to execute on each file.
-                                                            The function should accept a file path as argument
-                                                            and will be executed if provided.
-                                                            Defaults to None.
+            folder (str): Directory containing images.
+            batch_size (int): Number of images to process in each batch.
+            return_type (str): Format for returned vectors.
+            file_info_extractor (callable): Function to extract file information.
+            save_to_index (str): Path to save the index of processed files.
 
         Yields:
-            np.ndarray | str | list: The vector representation of each image if
-                                      file_processing_function is None.
-            or
-            tuple: A tuple containing the vector representation of each image
-                   and the result of file_processing_function if it is provided.
+            Batch results as specified by return_type.
         """
+        image_batch = []
         index = []
         for root, dirs, files in os.walk(folder):
             for file in files:
                 file_path = os.path.join(root, file)
-                # Attempt to read the file as an image
+                # Read image, skip if not valid
                 img = cv2.imread(file_path)
                 if img is not None:
-                    vector = self.image_to_vector(file_path, return_type=return_type)
+                    image_batch.append(file_path)
                     index.append(file_path)
 
-                    # Execute the specified function on the file, if provided
-                    if file_info_extractor is not None:
-                        file_info_result = file_info_extractor(file_path)
-                        yield vector, file_info_result
-                    else:
-                        yield vector
+                    if len(image_batch) == batch_size:
+                        yield from self.process_batch(image_batch, return_type, file_info_extractor)
+                        image_batch = []
+
+        # Process remaining images in the last batch
+        if image_batch:
+            yield from self.process_batch(image_batch, return_type, file_info_extractor)
 
         if save_to_index:
             with open(save_to_index, "w") as f:
-                # Write each file path to a new line in the index file
                 for path in index:
-                    f.write("%s\n" % path)
+                    f.write(f"{path}\n")
+
+    def process_batch(self, image_batch, return_type, file_info_extractor):
+        """
+        Process a batch of images for vectorization.
+
+        Args:
+            image_batch (list): List of image file paths.
+            return_type (str): Format for returned vectors.
+            file_info_extractor (callable): Function to extract file information.
+
+        Returns:
+            List of processed vectors or tuples of vectors and file info.
+        """
+        vectors = []
+        for image_path in image_batch:
+            vector = self.image_to_vector(image_path, return_type)
+            if file_info_extractor:
+                file_info = file_info_extractor(image_path)
+                vectors.append((vector, file_info))
+            else:
+                vectors.append(vector)
+
+        return vectors
