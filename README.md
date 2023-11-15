@@ -64,13 +64,15 @@ comparing different pieces of text or measuring how similar a piece of text is t
 
 ## 📦 Supported models
 
-|                              Model Name                               |         Implementation          |   Parameter Value   | Supports Image | Supports Text | Embedding Size |
-|:---------------------------------------------------------------------:|:-------------------------------:|:-------------------:|:--------------:|:-------------:|:--------------:|
-| [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32)  | [PyTorch](https://pytorch.org/) | `Models.CLIP_B_P32` |       ✅        |       ✅       |     (512,)     |
-| [CLIP ViT-L/14](https://huggingface.co/openai/clip-vit-large-patch14) | [PyTorch](https://pytorch.org/) | `Models.CLIP_L_P14` |       ✅        |       ✅       |     (768,)     |
-|               [VGG16](https://arxiv.org/abs/1409.1556)                |   [Keras](https://keras.io/)    |   `Models.VGG16`    |       ✅        |       ❌       |     (512,)     |
-|               [VGG19](https://arxiv.org/abs/1409.1556)                |   [Keras](https://keras.io/)    |   `Models.VGG19`    |       ✅        |       ❌       |     (512,)     |
-|        [Xception](https://keras.io/api/applications/xception/)        |   [Keras](https://keras.io/)    |  `Models.Xception`  |       ✅        |       ❌       |    (2048,)     |
+|                                         Model Name                                          |                     Implementation                     |    Parameter Value     | Supports Image | Supports Text | Embedding Size |
+|:-------------------------------------------------------------------------------------------:|:------------------------------------------------------:|:----------------------:|:--------------:|:-------------:|:--------------:|
+|            [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32)             |            [PyTorch](https://pytorch.org/)             |  `Models.CLIP_B_P32`   |       ✅        |       ✅       |     (512,)     |
+|            [CLIP ViT-L/14](https://huggingface.co/openai/clip-vit-large-patch14)            |            [PyTorch](https://pytorch.org/)             |  `Models.CLIP_L_P14`   |       ✅        |       ✅       |     (768,)     |
+| [CLIP ViT-B/32 OpenVino™](https://huggingface.co/scaleflex/clip-vit-base-patch32-openvino)  | [OpenVino™](https://docs.openvino.ai/2023.1/home.html) | `Models.CLIP_B_P32_OV` |       ✅        |       ✅       |     (512,)     |
+| [CLIP ViT-L/14 OpenVino™](https://huggingface.co/scaleflex/clip-vit-large-patch14-openvino) | [OpenVino™](https://docs.openvino.ai/2023.1/home.html) | `Models.CLIP_L_P14_OV` |       ✅        |       ✅       |     (768,)     |
+|                          [VGG16](https://arxiv.org/abs/1409.1556)                           |               [Keras](https://keras.io/)               |     `Models.VGG16`     |       ✅        |       ❌       |     (512,)     |
+|                          [VGG19](https://arxiv.org/abs/1409.1556)                           |               [Keras](https://keras.io/)               |     `Models.VGG19`     |       ✅        |       ❌       |     (512,)     |
+|                   [Xception](https://keras.io/api/applications/xception/)                   |               [Keras](https://keras.io/)               |   `Models.Xception`    |       ✅        |       ❌       |    (2048,)     |
 
 ## 🎛️ Usage
 
@@ -281,6 +283,12 @@ for vector, colors in vectorizer.load_from_folder(folder_path, file_info_extract
     print(f'Image colors: {colors}')
 ```
 
+## ⚠️ Disclaimer
+Vector Forge is provided as-is, without warranty of any kind. Users should employ the library at their own risk. It's
+important to test and validate the library's results in your specific context to ensure it meets your needs. Performance
+and accuracy can vary based on data and use cases. We encourage all users to thoroughly verify the library's outputs and
+consider them as one of many tools in their toolkit.
+
 ## 🔮 Future features
 
 - [ ] Make inference APIs which hold the models in memory
@@ -290,7 +298,9 @@ for vector, colors in vectorizer.load_from_folder(folder_path, file_info_extract
 - [x] Add support for VGG19
 - [x] Add possibility for index creation when using `load_from_folder`
 - [x] Add support for [larger CLIP model](https://huggingface.co/openai/clip-vit-large-patch14)
-- [ ] Optimize CLIP generation with [OpenVino IR](https://docs.openvino.ai/2022.3/notebooks/228-clip-zero-shot-image-classification-with-output.html)
+- [x] Optimize CLIP generation
+  with [OpenVino IR](https://docs.openvino.ai/2022.3/notebooks/228-clip-zero-shot-image-classification-with-output.html)
+- [x] Batch support for `load_from_folder` operations
 - [ ] Add support for custom type of Keras models
 
 ### Texts

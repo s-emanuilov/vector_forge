@@ -33,10 +33,10 @@ class Vectorizer:
     """
 
     def __init__(
-            self,
-            model: Models = Models.CLIP_B_P32,
-            image_preprocessor: Callable[[np.ndarray], np.ndarray] = None,
-            normalization: bool = False,
+        self,
+        model: Models = Models.CLIP_B_P32,
+        image_preprocessor: Callable[[np.ndarray], np.ndarray] = None,
+        normalization: bool = False,
     ):
         """
         Initializes the Vectorizer with the specified model and an optional image preprocessor function.
@@ -63,7 +63,12 @@ class Vectorizer:
 
             ov_path = snapshot_download(repo_id=model.value)
             self.processor = CLIPProcessor.from_pretrained(model.value)
-            ov_model_xml = os.path.join(ov_path, "clip-vit-base-patch32.xml")
+            model_file = (
+                "clip-vit-base-patch32.xml"
+                if model == Models.CLIP_B_P32_OV
+                else "clip-vit-large-patch14.xml"
+            )
+            ov_model_xml = os.path.join(ov_path, model_file)
             core = Core()
             ov_model = core.read_model(model=ov_model_xml)
             # Compile model for loading on device
@@ -90,9 +95,9 @@ class Vectorizer:
             raise ValueError(f"Unsupported model: {model}")
 
     def image_to_vector(
-            self,
-            input_image: str,
-            return_type: str = "numpy",
+        self,
+        input_image: str,
+        return_type: str = "numpy",
     ) -> np.ndarray | str | list:
         """
         Converts an image to a vector representation using the specified model.
@@ -134,7 +139,7 @@ class Vectorizer:
         return result
 
     def text_to_vector(
-            self, input_text: str, return_type: str = "numpy"
+        self, input_text: str, return_type: str = "numpy"
     ) -> np.ndarray | str | list:
         """
         Converts a given text to a vector representation using the specified model.
@@ -155,6 +160,14 @@ class Vectorizer:
             inputs = tokenizer(input_text, return_tensors="pt")
             text_emb = self.model_instance.get_text_features(**inputs)
             result = text_emb[0].cpu().detach().numpy()
+        elif self.model in (Models.CLIP_B_P32_OV, Models.CLIP_L_P14_OV):
+            # Generate a random "image" to pass throught layers of the OpenVino model
+            # then get only text_embeds
+            rand_image = np.random.randint(0, 256, (3, 3, 3), dtype=np.uint8)
+            text_tensor = self.processor(
+                text=[input_text], images=[rand_image], return_tensors="pt"
+            )
+            result = self.model_instance(dict(text_tensor))["text_embeds"][0]
         else:
             raise ValueError(f"Unsupported model for text: {self.model}")
 
@@ -302,8 +315,14 @@ class Vectorizer:
         else:
             raise ValueError(f"Unsupported return type: {return_type}")
 
-    def load_from_folder(self, folder, batch_size=32, return_type="numpy", file_info_extractor=None,
-                         save_to_index=None):
+    def load_from_folder(
+        self,
+        folder,
+        batch_size=32,
+        return_type="numpy",
+        file_info_extractor=None,
+        save_to_index=None,
+    ):
         """
         Process images in batches from a folder.
 
@@ -329,7 +348,9 @@ class Vectorizer:
                     index.append(file_path)
 
                     if len(image_batch) == batch_size:
-                        yield from self.process_batch(image_batch, return_type, file_info_extractor)
+                        yield from self.process_batch(
+                            image_batch, return_type, file_info_extractor
+                        )
                         image_batch = []
 
         # Process remaining images in the last batch

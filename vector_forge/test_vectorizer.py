@@ -11,6 +11,10 @@ from vector_forge import Vectorizer, Models
 from vector_forge import image_preprocessors, info_extractors
 
 
+def cosine_similarity(vec_a, vec_b):
+    return np.dot(vec_a, vec_b) / (np.linalg.norm(vec_a) * np.linalg.norm(vec_b))
+
+
 class TestVectorizer(unittest.TestCase):
     def setUp(self):
         self.vectorizer_clip = Vectorizer(model=Models.CLIP_B_P32)
@@ -18,9 +22,7 @@ class TestVectorizer(unittest.TestCase):
             model=Models.CLIP_B_P32,
             image_preprocessor=image_preprocessors.threshold_image,
         )
-        self.vectorizer_xception = Vectorizer(
-            model=Models.Xception
-        )
+        self.vectorizer_xception = Vectorizer(model=Models.Xception)
         self.vectorizer_vgg16 = Vectorizer(model=Models.VGG16)
         self.vectorizer_vgg19 = Vectorizer(model=Models.VGG19)
         self.sample_image_path = "test_data/sample.jpg"
@@ -53,6 +55,19 @@ class TestVectorizer(unittest.TestCase):
         # Testing text to vector with CLIP_B_P32 as it's the only model supporting text for now
         vector = self.vectorizer_clip.text_to_vector(self.sample_text)
         self.assertIsInstance(vector, np.ndarray)
+
+    def test_similarity(self):
+        vectorizer = Vectorizer(model=Models.CLIP_B_P32_OV)
+
+        # Generate text embeddings
+        text_embedding_1 = vectorizer.text_to_vector("The dog is on the couch")
+        text_embedding_2 = vectorizer.text_to_vector("The dog just sat on the couch")
+
+        # Calculate similarity
+        similarity = cosine_similarity(text_embedding_1, text_embedding_2)
+
+        # Test if similarity is above 96%
+        self.assertGreaterEqual(similarity, 0.96, "Similarity is below 96%")
 
     def test_load_from_folder(self):
         vectors = list(
