@@ -115,12 +115,9 @@ class Vectorizer:
         elif self.model in (Models.CLIP_B_P32_OV, Models.CLIP_L_P14_OV):
             input_image = self._prepare_image_clip(input_image)
             image_tensor = self.processor(
-                text=None, images=input_image, return_tensors="pt"
-            )["pixel_values"]
-            d = self.model_instance
-            img_emb = self.model_instance(dict(image_tensor))[
-                self.model_instance.output(0)
-            ]
+                text=["", ""], images=[input_image], return_tensors="pt"
+            )
+            img_emb = self.model_instance(dict(image_tensor))["image_embeds"]
         elif self.model == Models.Xception:
             input_image = self._prepare_image_xception(input_image)
             img_emb = self.model_instance.predict(input_image, verbose=0)
