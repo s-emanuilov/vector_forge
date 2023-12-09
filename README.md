@@ -31,12 +31,10 @@
 
 🌄 For image embeddings, Vector Forge uses pre-trained networks, which means the models have already learned features
 from
-a large set of images called [ImageNet](https://www.image-net.org/). When we use these models in Vector Forge, we skip
-the part that
-identifies objects, and instead, we use
-the part that understands the image features. This way, we get a bunch of numbers (a vector) representing the image,
+a large set, for example - [ImageNet](https://www.image-net.org/). When we use these models in Vector Forge, we remove the last classification layer and return embeddings. 
+This way, we get a bunch of numbers (a vector) representing the image,
 which can be used
-in many different tasks like finding similar images, clustering, classification and many more.
+in many different tasks like finding similar images, semantic search, clustering, classification and many more.
 
 📄 Text embeddings are a way to convert words or sentences into numbers, making it possible for computers to understand
 and
