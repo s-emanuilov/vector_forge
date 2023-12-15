@@ -41,7 +41,7 @@ in many different tasks like finding similar images, clustering, classification 
 📄 Text embeddings are a way to convert words or sentences into numbers, making it possible for computers to understand
 and
 process them. In Vector Forge, the [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32) model is
-utilized to generate these embeddings. When you provide any text, be it
+utilized to generate one of those embeddings. When you provide any text, be it
 a single word or a sentence, to CLIP, it transforms this text into a fixed-size vector. Each vector has a consistent
 length, no matter how long or short the original text is. This consistency in size is valuable, especially when
 comparing different pieces of text or measuring how similar a piece of text is to an image.
@@ -52,7 +52,7 @@ comparing different pieces of text or measuring how similar a piece of text is t
   to extract meaningful representations.
 - **Batch processing**: Provide a folder path to process multiple images in bulk. Select your preferred model and let
   Vector Forge swiftly handle all the images in the specified directory.
-- **Text to Vector transformation**: Effortlessly convert textual data into vectors. Choose your model, and Vector Forge
+- **Text to vector transformation**: Effortlessly convert textual data into vectors. Choose your model, and Vector Forge
   will transform your text input into a high-dimensional vector representation.
 - **Support for multiple models**: Vector Forge supports various models for vectorization, including CLIP ViT-B/32, CLIP
   ViT-L/14, Xception,
@@ -74,8 +74,8 @@ comparing different pieces of text or measuring how similar a piece of text is t
 
 ## 🎛️ Usage
 
-You can work on many pictures at once or just one piece of text with simple commands, making it a breeze to get your
-data ready for further use or analysis
+You can work on many images at once or just one piece of text with simple commands, making it a breeze to get your
+data ready for further use or analysis.
 
 ### 🔧 Installation
 
