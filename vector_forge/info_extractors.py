@@ -1,3 +1,4 @@
+import mimetypes
 import os
 from datetime import datetime
 from typing import Dict
@@ -96,3 +97,23 @@ def get_aspect_ratio(file_path: str) -> Dict[str, float]:
     aspect_ratio = width / height
 
     return {"aspect_ratio": aspect_ratio}
+
+
+def get_file_mime_type(file_path: str) -> str:
+    """
+    Fetches the MIME type of the specified file.
+
+    Args:
+        file_path (str): The path to the file.
+
+    Returns:
+        str: The MIME type of the file.
+    """
+    # Guess the MIME type of the file
+    mime_type, _ = mimetypes.guess_type(file_path)
+
+    # If MIME type could not be determined, return a default message
+    if mime_type is None:
+        mime_type = "unknown"
+
+    return mime_type
