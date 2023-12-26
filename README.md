@@ -280,6 +280,8 @@ for vector, colors in vectorizer.load_from_folder(folder_path, file_info_extract
     print(f'Vector shape: {vector.shape}')
     print(f'Image colors: {colors}')
 ```
+## ▶️ Tutorials
+- [Converting images to vectors using Vector Forge and CLIP](https://unfoldai.com/images-to-vectors-using-vector-forge-and-clip/)
 
 ## ⚠️ Disclaimer
 Vector Forge is provided as-is, without warranty of any kind. Users should employ the library at their own risk. It's
